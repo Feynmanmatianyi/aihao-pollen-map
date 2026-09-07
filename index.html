@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蒿草花粉 · 全国历史图鉴</title>
+<style>
+  :root {
+    --bg: #0b1220; --panel: #101b30; --panel2: #0e1830;
+    --border: #1e2a44; --text: #e2e8f0; --text2: #94a3b8;
+    --accent: #38bdf8; --accent2: #f59e0b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: radial-gradient(1200px 600px at 20% -10%, #14213d 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: "PingFang SC","Microsoft YaHei","Segoe UI",system-ui,sans-serif;
+    min-height: 100vh; overflow-x: hidden;
+  }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 12px 22px; border-bottom:1px solid var(--border);
+    background: rgba(10,18,34,.7); backdrop-filter: blur(6px);
+    position: sticky; top:0; z-index:20; flex-wrap:wrap; gap:10px;
+  }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand .logo {
+    width:38px;height:38px;border-radius:10px;flex:none;
+    background: linear-gradient(135deg,#22c55e,#f59e0b 55%,#ef4444);
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px; box-shadow:0 0 18px rgba(245,158,11,.35);
+  }
+  .brand h1 { font-size:18px; letter-spacing:.5px; }
+  .brand p { font-size:12px; color:var(--text2); margin-top:2px; }
+  .badge-note {
+    display:inline-block;vertical-align:middle;font-size:11px;font-weight:500;
+    padding:2px 8px;border-radius:10px;margin-left:8px;
+    background:rgba(148,163,184,.12);color:#94a3b8;border:1px solid rgba(148,163,184,.3);
+  }
+  .controls { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .year-group { display:flex; background:var(--panel); border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+  .year-btn {
+    padding:7px 15px; font-size:13.5px; cursor:pointer; color:var(--text2);
+    border:none; background:transparent; transition:all .2s;
+  }
+  .year-btn.active { background:linear-gradient(135deg,#1d4ed8,#2563eb); color:#fff; }
+  .btn {
+    padding:7px 14px; border-radius:9px; cursor:pointer; font-size:13px;
+    border:1px solid var(--border); background:var(--panel); color:var(--text2);
+    transition:all .2s;
+  }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+
+  /* 移动优先：默认纵向单列 */
+  .main { display:flex; flex-direction:column; gap:12px; padding:10px 12px; align-items:stretch; }
+  .map-wrap {
+    flex: 1 1 0; min-width:0; display:flex; flex-direction:column; position:relative;
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:10px; box-shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  .export-title { display:none; font-size:30px; font-weight:700; text-align:center; padding:8px 0 2px; letter-spacing:1px; }
+  .export-title small { display:block; font-size:15px; color:var(--text2); font-weight:400; margin-top:6px; letter-spacing:0; }
+  #map { width:100%; height:52vh; min-height:300px; }
+  /* 来源标注：页面上不常驻，改为 ⓘ 按钮点开；仅导出动图时常驻 */
+  .map-source {
+    display:none; position:absolute; right:16px; bottom:96px; z-index:6;
+    font-size:11px; color:#7c8ba5; background:rgba(11,18,32,.72);
+    padding:3px 8px; border-radius:6px; border:1px solid #1c2c4a; pointer-events:none;
+  }
+  .map-src-btn {
+    position:absolute; right:12px; bottom:92px; z-index:7;
+    font-size:11.5px; color:#8fa3bf; background:rgba(11,18,32,.78);
+    padding:5px 10px; border-radius:12px; border:1px solid #1c2c4a;
+    cursor:pointer; font-family:inherit; -webkit-tap-highlight-color:transparent;
+  }
+  .map-src-btn:hover, .map-src-btn:active { color:var(--accent); border-color:var(--accent); }
+  .map-legend { display:flex; align-items:center; justify-content:center; gap:10px; padding:6px 4px 2px; font-size:12px; color:var(--text2); flex-wrap:wrap; }
+  .grad-bar {
+    width: 300px; height: 12px; border-radius: 6px;
+    background: linear-gradient(90deg,#60a5fa 0%,#22d3ee 25%,#facc15 50%,#fb923c 75%,#ef4444 100%);
+  }
+  .dot-legend { display:inline-block; width:10px;height:10px;border-radius:50%; margin-right:4px; }
+  .timeline {
+    margin-top:6px; border-top:1px solid var(--border); padding:8px 10px 4px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .tl-date {
+    font-size:23px; font-weight:700; color:var(--accent); min-width:150px;
+    font-variant-numeric: tabular-nums; letter-spacing:1px;
+  }
+  .tl-date small { font-size:13px; color:var(--text2); font-weight:400; margin-left:6px; }
+  .tl-slider { flex:1 1 160px; max-width:340px; opacity:.8; }
+  input[type=range] { width:100%; accent-color: var(--accent); height:6px; cursor:pointer; }
+  .tl-controls { display:flex; align-items:center; gap:8px; }
+  .play-btn {
+    width:46px;height:46px;border-radius:50%; border:none; cursor:pointer; font-size:17px;
+    -webkit-tap-highlight-color:transparent;
+    background: linear-gradient(135deg,#2563eb,#38bdf8); color:#fff;
+    box-shadow:0 0 14px rgba(56,189,248,.4); transition:transform .15s;
+  }
+  .play-btn:active { transform:scale(.92); }
+  .speed-group { display:flex; background:var(--panel2); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .speed-btn { padding:7px 12px; font-size:12px; color:var(--text2); border:none; background:transparent; cursor:pointer; }
+  .speed-btn.active { background:var(--accent); color:#06121f; font-weight:600; }
+
+  aside { width:100%; display:flex; flex-direction:column; gap:12px; }
+  .cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
+  .card .k { font-size:12px; color:var(--text2); }
+  .card .v { font-size:21px; font-weight:700; margin-top:4px; }
+  .card .v small { font-size:12px; color:var(--text2); font-weight:400; }
+  .stat-panel {
+    flex:0 0 auto; display:flex; flex-direction:column;
+    background:var(--panel); border:1px solid var(--border); border-radius:12px;
+    padding:10px 12px 6px; box-shadow:0 8px 30px rgba(0,0,0,.3);
+  }
+  #statChart { flex:1 1 0; min-height:280px; width:100%; }
+  .city-hint { font-size:12px; color:var(--text2); padding:4px 6px 2px; }
+  .city-hint b { color:var(--accent); }
+
+  .citybar { display:flex; align-items:center; gap:6px; }
+  .citybar input {
+    width:150px; padding:6px 10px; font-size:13px; border-radius:8px;
+    border:1px solid var(--border); background:var(--panel2); color:var(--text);
+    outline:none; font-family:inherit;
+  }
+  .citybar input:focus { border-color:var(--accent); }
+  .citybar .btn { padding:6px 11px; font-size:12.5px; }
+  .suggest {
+    position:absolute; top:100%; left:0; right:0; z-index:30;
+    background:#0f1b31; border:1px solid #2a3b63; border-radius:9px;
+    max-height:260px; overflow:auto; display:none; box-shadow:0 12px 30px rgba(0,0,0,.5);
+  }
+  .suggest.show { display:block; }
+  .suggest div { padding:7px 12px; font-size:13px; cursor:pointer; color:#cbd5e1; }
+  .suggest div:hover { background:#16253f; color:var(--accent); }
+  .suggest .empty { color:#64748b; cursor:default; }
+  .citybar-wrap { position:relative; }
+
+  .modal-mask {
+    position:fixed; inset:0; background:rgba(4,8,16,.72); backdrop-filter: blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:50;
+  }
+  .modal-mask.show { display:flex; }
+  .modal {
+    width:min(760px,92vw); max-height:86vh; overflow:auto;
+    background:#0f1b31; border:1px solid #2a3b63; border-radius:16px; padding:26px 30px;
+    box-shadow:0 20px 60px rgba(0,0,0,.5);
+  }
+  .modal h2 { font-size:18px; margin-bottom:14px; }
+  .modal h3 { font-size:14px; color:var(--accent); margin:16px 0 8px; }
+  .modal p, .modal li { font-size:13.5px; line-height:2; color:#cbd5e1; }
+  .modal ul { padding-left:20px; }
+  .modal .close { float:right; cursor:pointer; font-size:22px; color:var(--text2); }
+  /* 常驻来源与时效标注：法规要求的署名义务，不可折叠，故做成一行极简小字 */
+  .srcbar {
+    padding:9px 14px calc(10px + env(safe-area-inset-bottom));
+    color:#7c8ba5; font-size:11px; line-height:1.75; text-align:center;
+    border-top:1px solid var(--border);
+  }
+  .srcbar b { color:#94a3b8; font-weight:500; }
+
+  .src-tag { display:inline-block; padding:1px 8px; border-radius:20px; font-size:11px; margin-left:6px; }
+  .src-real { background:rgba(52,211,153,.15); color:#34d399; border:1px solid rgba(52,211,153,.4); }
+  .src-model{ background:rgba(148,163,184,.12); color:#94a3b8; border:1px solid rgba(148,163,184,.3); }
+
+  body.export { overflow:hidden; }
+  body.export header, body.export aside, body.export .srcbar { display:none !important; }
+  body.export .main { padding:0; display:block; }
+  body.export .map-wrap { width:1080px; height:1080px; margin:0 auto; flex:none; padding:16px 20px; border-radius:0; }
+  body.export .export-title { display:block; }
+  body.export #map { height:820px; }
+  body.export .map-source { display:block; bottom:104px; font-size:14px; right:24px; }
+  body.export .map-src-btn { display:none; }
+  body.export .tl-date { font-size:34px; min-width:210px; }
+  body.export .map-legend { font-size:15px; padding:8px 4px 2px; }
+  body.export .grad-bar { width:420px; height:15px; }
+  body.export .timeline { padding:10px 12px 6px; margin-top:8px; }
+  body.export input[type=range] { height:8px; }
+
+  /* 桌面宽屏（>=1000px）才恢复左右分栏 */
+  @media (min-width: 1000px) {
+    .main { flex-direction:row; gap:14px; padding:14px 18px; }
+    aside { width:430px; flex:none; }
+    #map { height:620px; min-height:0; }
+    .stat-panel { flex:1 1 0; min-height:0; }
+    #statChart { min-height:340px; }
+  }
+  /* 手机：压缩头部、放大触控区、底部留安全区 */
+  @media (max-width: 640px) {
+    header { padding:10px 12px; gap:8px; }
+    .brand { gap:9px; }
+    .brand .logo { width:32px; height:32px; font-size:17px; border-radius:8px; }
+    .brand h1 { font-size:15px; }
+    .brand p { display:none; }
+    .badge-beta { font-size:10px; padding:1px 6px; margin-left:4px; }
+    .controls { width:100%; justify-content:space-between; gap:6px; }
+    .year-group { flex:1 1 auto; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .year-btn { padding:9px 13px; font-size:13px; white-space:nowrap; }
+    .citybar input { width:104px; padding:8px 10px; }
+    .main { padding:8px 8px calc(10px + env(safe-area-inset-bottom)); }
+    .map-wrap { padding:8px; border-radius:12px; }
+    #map { height:46vh; min-height:280px; }
+    .map-legend { font-size:11px; gap:6px; padding:4px 2px 2px; }
+    .grad-bar { width:200px; height:10px; }
+    .timeline { gap:8px; padding:6px 4px 2px; }
+    .tl-date { font-size:21px; min-width:0; }
+    .tl-slider { flex:1 1 100%; max-width:none; order:3; }
+    .tl-controls { gap:6px; }
+    .card { padding:10px 12px; }
+    .card .v { font-size:19px; }
+    #statChart { min-height:250px; }
+    .modal { padding:20px 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">🌿</div>
+    <div>
+      <h1>蒿草花粉 · 全国历史图鉴 <span class="badge-note">非官方 · 历史整理</span></h1>
+      <p>2022–2026 · 357 地级市逐日浓度历史回放</p>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="year-group" id="yearGroup"></div>
+    <div class="citybar">
+      <div class="citybar-wrap">
+        <input id="cityInput" placeholder="搜索城市…" autocomplete="off">
+        <div class="suggest" id="citySuggest"></div>
+      </div>
+      <button class="btn" id="locateBtn" title="定位到我所在城市">定位</button>
+    </div>
+    <button class="btn" id="infoBtn" onclick="openModal()" title="数据说明与来源">ⓘ</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="map-wrap">
+    <div class="export-title" id="exportTitle">—</div>
+    <div id="map"></div>
+    <div class="map-source">浓度：4 城公开监测 + 353 城模型推演｜非官方发布</div>
+    <button class="map-src-btn" id="mapSrcBtn" title="数据说明与来源">ⓘ 来源</button>
+    <div class="map-legend">
+      <span>浓度(粒/1000mm²·日)</span>
+      <span class="grad-bar"></span>
+      <span>1 低</span><span>2 较低</span><span>3 中等</span><span>4 高</span><span>5 很高</span>
+      <span style="margin-left:14px"><span class="dot-legend" style="background:#fff;box-shadow:0 0 6px #fff"></span>公开监测</span>
+      <span style="margin-left:6px"><span class="dot-legend" style="background:#64748b;opacity:.5"></span>模型推演</span>
+    </div>
+    <div class="timeline">
+      <div class="tl-date" id="tlDate">—</div>
+      <div class="tl-slider">
+        <input type="range" id="tlSlider" min="0" max="102" value="0" step="1">
+      </div>
+      <div class="tl-controls">
+        <button class="play-btn" id="playBtn" title="播放/暂停">▶</button>
+        <div class="speed-group">
+          <button class="speed-btn" data-s="1">1×</button>
+          <button class="speed-btn active" data-s="2">2×</button>
+          <button class="speed-btn" data-s="4">4×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="cards">
+      <div class="card"><div class="k" id="kPeak">本年峰值</div><div class="v warn" id="cPeak">—</div></div>
+      <div class="card"><div class="k" id="kDate">峰值日期</div><div class="v good" id="cDate">—</div></div>
+    </div>
+    <div class="stat-panel">
+      <div class="city-hint" id="cityHint">—</div>
+      <div id="statChart"></div>
+    </div>
+
+  </aside>
+</div>
+
+<div class="srcbar">
+  数据来源：<b>呼和浩特市赛罕区气象局</b>、<b>北京世纪坛医院变态反应中心</b>等 4 城公开监测 + 353 城生态模型推演
+  ｜ 数据截止 <b>2026-09-06</b> ｜ 更新 <b>2026-09-07</b>
+  ｜ 非官方发布 · 不作花粉预报 · 不作医疗建议
+</div>
+
+<div class="modal-mask" id="modal">
+  <div class="modal">
+    <span class="close" onclick="closeModal()">×</span>
+    <h2>数据说明与重要声明</h2>
+
+    <h3>浓度分级（粒/1000mm²·日）</h3>
+    <ul>
+      <li>0 级 无：0 粒</li>
+      <li>1 级 低：1–50 粒</li>
+      <li>2 级 较低：51–150 粒</li>
+      <li>3 级 中等：151–400 粒</li>
+      <li>4 级 高：401–1000 粒</li>
+      <li>5 级 很高：&gt;1000 粒</li>
+    </ul>
+    <p style="font-size:12px;color:#64748b;margin-top:6px">分级数值区间引自公开的花粉浓度分级标准；<b>本页不对各等级的健康效应作任何描述或建议</b>。</p>
+
+    <h3>图表怎么读</h3>
+    <ul>
+      <li><b>亮线</b>：顶部选中的年份（默认 2026 年），最粗并带填充</li>
+      <li><b>暗色细线</b>：其余各年同城市曲线，用于逐年对比</li>
+      <li><b>灰色虚线</b>：五年同日均值</li>
+      <li><b>圆点</b>：各年峰值位置；当年峰值标注数值与日期</li>
+      <li><b>蓝色竖线</b>：地图当前播放到的日期，随播放同步移动</li>
+      <li><b>地图圆点</b>：白色描边 + 城市名 = 4 个公开监测锚点；半透明无描边 = 353 城模型推演</li>
+      <li>切换城市：点击地图圆点 / 顶部搜索框 / 定位按钮</li>
+    </ul>
+
+    <h3>真实监测锚点</h3>
+    <ul>
+      <li><b>呼和浩特·赛罕区气象局</b>：2020–2026 连续多年秋季花粉实况监测（蒿属+藜科为主）。年度集中期平均浓度：2020 年 199 / 2021 年 275 / 2022 年 138（春夏连旱）/ 2023 年 337 粒·千mm²；2024 年首次高浓度日 7 月 5 日，8 月 5 日起集中爆发。<b>2026 年</b>：集中期推迟约 10 天（8 月 7 日进入），7 月 1 日至 8 月 13 日城区浓度较 2025 年同期下降约 54%，日峰值约 400 余粒/千mm²，高浓度持续至 8 月底至 9 月上旬。</li>
+      <li><b>北京·世纪坛医院变态反应中心</b>：逐日监测。2024 年 8 月 7 日（立秋）主要致敏花粉 38 粒/千mm²（蒿属 2 粒）；2024 年 9 月 9 日总花粉达 1836 粒/千mm²。</li>
+      <li><b>与官方预报的关系</b>：国家卫健委与中国气象局自 2026 年起联合发布花粉浓度预报。<b>本页不制作、不发布、不转发任何预报产品，也不转述其具体预报结论。</b>如需权威预报与防护指导，请使用官方渠道。</li>
+    </ul>
+
+    <h3>2026 年数据范围</h3>
+    <p>2026 年为进行中的年份，本页数据<b>截止至 2026 年 9 月 6 日</b>（季节第 79 天）。时间轴滑块上限自动对齐已整理到的日期；9 月 7 日及之后尚未采集，不做任何外推或预估。</p>
+
+    <h3>数据性质与方法</h3>
+    <p>本页为<b>公开资料整理与可视化研究</b>成果：4 城采用公开监测数据作为锚点，其余 353 城由蒿属生态分布区与花期物候模型推演生成，<b>推演值不等于实测值</b>，仅可用于观察大尺度时空趋势，不可用于任何单点判断。模型参数依据公开报道的物候与气象事实逐年校准复核。</p>
+    <p><b>底图说明</b>：地图边界数据仅用于空间示意，不主张任何权属，亦不作为标准地图使用。</p>
+
+    <h3>重要声明</h3>
+    <ul>
+      <li><b>非官方数据</b>：国家目前尚无覆盖全部地级市的蒿草花粉逐日公开数据库。本页 357 城中仅 4 城有公开监测锚点，其余 353 城为生态模型推演结果，<b>不代表官方实测值</b>，不作为任何形式的权威数据引用。</li>
+      <li><b>不发布预报</b>：依据《中华人民共和国气象法》及《气象预报发布与传播管理办法》，公众气象预报实行统一发布制度。本页仅作历史资料整理与回放，<b>不制作、不发布、不转发任何花粉或气象预报</b>，不含任何未来时段的数值外推。</li>
+      <li><b>不作决策依据</b>：本页内容不构成医疗建议、诊断意见或出行指引。如需权威花粉预报与防护指导，请关注中国天气网花粉过敏气象指数、各地气象台"花粉监测预报"公众号或"花粉健康宝"小程序。</li>
+    </ul>
+    <p style="margin-top:10px;text-align:right"><button class="btn" onclick="closeModal()" style="color:#fff;background:#2563eb;border:none;padding:8px 22px;border-radius:8px;cursor:pointer">知道了</button></p>
+  </div>
+</div>
+
+<div class="modal-mask" id="cityModal">
+  <div class="modal" style="width:min(460px,92vw)">
+    <span class="close" onclick="closeCityModal()">×</span>
+    <h2>选择城市</h2>
+    <p id="cityModalTip" style="font-size:13px;color:#94a3b8;margin-bottom:10px"></p>
+    <input id="citySearch2" placeholder="输入城市名…" autocomplete="off"
+      style="width:100%;padding:9px 12px;font-size:14px;border-radius:9px;border:1px solid #2a3b63;background:#0b1425;color:#e2e8f0;outline:none;font-family:inherit">
+    <div id="cityList" style="margin-top:10px;max-height:46vh;overflow:auto"></div>
+  </div>
+</div>
+
+<script src="lib/echarts.min.js"></script>
+<script src="lib/china.js"></script>
+<script src="data/cities.js"></script>
+<script src="data/pollen.js"></script>
+<script>
+/* ================= 常量 ================= */
+const SEASON_START = new Date(2024, 5, 20);
+const DAYS = 103;
+const YEARS = ["2022", "2023", "2024", "2025", "2026"];
+const TODAY_2026 = 78;
+const DEFAULT_CITY = "北京";
+
+const CITIES = window.CITIES.map(c => ({ name: c.n, lat: c.lat, lng: c.lng, rich: c.rich, anchor: c.anchor }));
+const POLLEN = window.POLLEN;
+const cityByName = {};
+CITIES.forEach(c => cityByName[c.name] = c);
+const ANCHOR_SET = new Set(CITIES.filter(c => c.anchor === 1).map(c => c.name));
+
+const YEAR_COLOR = ["#38bdf8", "#f59e0b", "#f43f5e", "#34d399", "#a78bfa"];
+const PIECES = [
+  { gt: 0,    lte: 50,   color: "#60a5fa", label: "1级 低" },
+  { gt: 50,   lte: 150,  color: "#22d3ee", label: "2级 较低" },
+  { gt: 150,  lte: 400,  color: "#facc15", label: "3级 中等" },
+  { gt: 400,  lte: 1000, color: "#fb923c", label: "4级 高" },
+  { gt: 1000,            color: "#ef4444", label: "5级 很高" }
+];
+
+function dateAt(idx) {
+  const d = new Date(SEASON_START.getTime() + idx * 86400000);
+  return { m: d.getMonth() + 1, d: d.getDate(), md: `${d.getMonth() + 1}月${d.getDate()}日` };
+}
+function daysLen(year) { return POLLEN[year] ? POLLEN[year]["呼和浩特"].length : DAYS; }
+function levelOf(v) {
+  if (v <= 0) return 0;
+  if (v <= 50) return 1;
+  if (v <= 150) return 2;
+  if (v <= 400) return 3;
+  if (v <= 1000) return 4;
+  return 5;
+}
+const LEVEL_NAME = ["无", "低", "较低", "中等", "高", "很高"];
+function levelColor(lv) { return ["#475569", "#60a5fa", "#22d3ee", "#facc15", "#fb923c", "#ef4444"][lv]; }
+
+function peakOf(name, year) {
+  const arr = POLLEN[year][name];
+  let mx = 0, mi = 0;
+  for (let i = 0; i < arr.length; i++) if (arr[i] > mx) { mx = arr[i]; mi = i; }
+  return { mx, mi, date: dateAt(mi).md };
+}
+
+/* ================= 状态 ================= */
+const qs = new URLSearchParams(location.search);
+const IS_EXPORT = qs.get("export") === "1";
+const AUTOPLAY = qs.get("play") !== "0" && !IS_EXPORT;
+
+let state = {
+  year: "2026",
+  idx: 0,
+  playing: false,
+  speed: 2,
+  timer: null,
+  selectedCity: DEFAULT_CITY
+};
+if (qs.get("year") && YEARS.includes(qs.get("year"))) state.year = qs.get("year");
+if (qs.has("idx")) state.idx = Math.max(0, (+qs.get("idx") || 0));
+if (qs.get("city") && cityByName[qs.get("city")]) state.selectedCity = qs.get("city");
+if (IS_EXPORT) document.body.classList.add("export");
+
+/* ================= 地图 ================= */
+CHINA_GEO.features.forEach(f => { if (!f.properties.name) f.properties.name = "南海诸岛"; });
+echarts.registerMap("china", CHINA_GEO);
+const mapChart = echarts.init(document.getElementById("map"), null, { renderer: "canvas" });
+
+mapChart.setOption({
+  backgroundColor: "transparent",
+  tooltip: {
+    trigger: "item",
+    backgroundColor: "rgba(13,23,42,.94)",
+    borderColor: "#2a3b63",
+    textStyle: { color: "#e2e8f0", fontSize: 13 },
+    formatter(p) {
+      if (p.seriesType !== "scatter" && p.seriesType !== "effectScatter") return p.name;
+      const v = p.value[2], lv = levelOf(v);
+      const tag = p.value[3] === 1
+        ? '<span style="color:#34d399">● 公开监测锚点</span>'
+        : '<span style="color:#94a3b8">○ 生态模型推演</span>';
+      return `<b style="font-size:14px">${p.name}</b><br/>` +
+             `花粉浓度：<b style="color:${levelColor(lv)}">${v}</b> 粒/1000mm²<br/>` +
+             `等级：${lv} 级（${LEVEL_NAME[lv]}）<br/>${tag}`;
+    }
+  },
+  geo: {
+    map: "china", roam: true, center: [104.5, 36.5], zoom: 1.04,
+    scaleLimit: { min: 0.8, max: 8 },
+    itemStyle: { areaColor: "#0d1b2e", borderColor: "#1f3352", borderWidth: 0.7 },
+    emphasis: { itemStyle: { areaColor: "#132742" }, label: { show: false } },
+    label: { show: false },
+    regions: [{ name: "南海诸岛", itemStyle: { areaColor: "#0d1b2e", borderColor: "#1f3352" } }]
+  },
+  visualMap: {
+    id: "vm", type: "piecewise", min: 0, max: 1600,
+    dimension: 2, show: false, seriesIndex: 0, pieces: PIECES
+  },
+  series: [
+    {
+      id: "conc", name: "花粉浓度", type: "scatter", coordinateSystem: "geo",
+      symbolSize(val) {
+        const lv = levelOf(val[2]);
+        const isA = val[3] === 1;
+        if (isA) return lv >= 4 ? 16 : 14;
+        return lv >= 5 ? 13 : lv >= 4 ? 10 : 7;
+      },
+      itemStyle: { borderColor: "#0b1220", borderWidth: 1 },
+      label: {
+        show: true, position: "right", distance: 6,
+        formatter: p => (p.value[3] === 1 ? p.name : ""),
+        color: "#e2e8f0", fontSize: 11, fontWeight: 500,
+        textBorderColor: "#0b1220", textBorderWidth: 2.5
+      },
+      data: [], zlevel: 2
+    },
+    {
+      id: "fx", name: "高值城市", type: "effectScatter", coordinateSystem: "geo",
+      symbolSize: 10,
+      rippleEffect: { brushType: "stroke", scale: 3.2, period: 3.5 },
+      itemStyle: { color: "#f43f5e", shadowBlur: 8, shadowColor: "rgba(244,63,94,.6)" },
+      data: [], zlevel: 3
+    }
+  ]
+});
+mapChart.on("click", p => {
+  if (p.seriesType !== "scatter" && p.seriesType !== "effectScatter") return;
+  const name = p.name || (p.data && p.data.name);
+  if (name) selectCity(name);
+});
+
+function frameData(year, idx) {
+  const scatter = [], fx = [];
+  let high = 0, top = null;
+  for (const c of CITIES) {
+    const arr = POLLEN[year][c.name];
+    const v = idx < arr.length ? arr[idx] : 0;
+    if (!v || v <= 0) continue;
+    const isA = c.anchor === 1;
+    scatter.push({
+      name: c.name,
+      value: [c.lng, c.lat, v, c.anchor],
+      itemStyle: isA
+        ? { opacity: 1, borderColor: "#ffffff", borderWidth: 1.3 }
+        : { opacity: 0.5, borderColor: "transparent", borderWidth: 0 }
+    });
+    if (levelOf(v) >= 4) { high++; fx.push({ name: c.name, value: [c.lng, c.lat, v] }); }
+    if (!top || v > top.v) top = { name: c.name, v };
+  }
+  return { scatter, fx, high, top };
+}
+
+/* ================= 时间轴与播放 ================= */
+const slider = document.getElementById("tlSlider");
+const tlDateEl = document.getElementById("tlDate");
+const playBtn = document.getElementById("playBtn");
+
+function setFrame(idx, renderCharts = true) {
+  const len = daysLen(state.year);
+  state.idx = Math.min(Math.max(0, idx), len - 1);
+  slider.max = len - 1;
+  slider.value = state.idx;
+  const dt = dateAt(state.idx);
+  const cutTag = (state.year === "2026" && state.idx >= TODAY_2026)
+    ? '<span style="font-size:12px;color:#34d399;font-weight:400;margin-left:4px">● 数据截止</span>' : "";
+  tlDateEl.innerHTML = `${dt.md}<small>${state.year} 年</small>${cutTag}`;
+  if (IS_EXPORT) {
+    document.getElementById("exportTitle").innerHTML =
+      `${state.year} 年 · 蒿草花粉全国扩散<small>地级市逐日浓度回放 · 6月20日–9月30日</small>`;
+  }
+  if (renderCharts) {
+    const f = frameData(state.year, state.idx);
+    mapChart.setOption({ series: [{ id: "conc", data: f.scatter }, { id: "fx", data: f.fx }] });
+  }
+  updateCursor();
+}
+
+/* 匀速播放：以「起始帧 + 已过时间 / 单帧时长」推算当前帧，
+   渲染再慢也只会跳帧、不会拖慢节奏，整段时长恒定。 */
+const FRAME_MS = { 1: 300, 2: 150, 4: 75 };
+let playT0 = 0, playBaseIdx = 0, rafId = 0;
+
+function startPlay() {
+  stopPlay();
+  const len = daysLen(state.year);
+  if (state.idx >= len - 1) { setFrame(0); }          // 播完后再点播放 → 从头
+  state.playing = true;
+  playBtn.textContent = "⏸";
+  playBaseIdx = state.idx;
+  playT0 = performance.now();
+  rafId = requestAnimationFrame(tickPlay);
+}
+function tickPlay(now) {
+  if (!state.playing) return;
+  const len = daysLen(state.year);
+  const target = playBaseIdx + Math.floor((now - playT0) / FRAME_MS[state.speed]);
+  if (target >= len - 1) { setFrame(len - 1); stopPlay(); return; }
+  if (target !== state.idx) setFrame(target);
+  rafId = requestAnimationFrame(tickPlay);
+}
+function stopPlay() {
+  state.playing = false;
+  playBtn.textContent = "▶";
+  if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+}
+playBtn.addEventListener("click", () => state.playing ? stopPlay() : startPlay());
+slider.addEventListener("input", () => { stopPlay(); setFrame(+slider.value); });
+document.querySelectorAll(".speed-btn").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".speed-btn").forEach(x => x.classList.remove("active"));
+  b.classList.add("active");
+  state.speed = +b.dataset.s;
+  if (state.playing) { playBaseIdx = state.idx; playT0 = performance.now(); }  // 改速不打断节奏
+}));
+
+/* ---------- 年份切换 ---------- */
+const yearGroup = document.getElementById("yearGroup");
+YEARS.forEach(y => {
+  const b = document.createElement("button");
+  b.className = "year-btn" + (y === state.year ? " active" : "");
+  b.textContent = y + " 年";
+  b.addEventListener("click", () => {
+    stopPlay();
+    state.year = y;
+    document.querySelectorAll(".year-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    setFrame(0);
+    renderCityDetail();
+    if (AUTOPLAY) startPlay();
+  });
+  yearGroup.appendChild(b);
+});
+
+/* ================= 折线图 ================= */
+const statChart = echarts.init(document.getElementById("statChart"), null, { renderer: "canvas" });
+
+function renderCityDetail() {
+  const name = state.selectedCity;
+  const c = cityByName[name];
+  const isAnchor = ANCHOR_SET.has(name);
+  const curIdx = YEARS.indexOf(state.year);
+
+  const lineSeries = YEARS.map((y, i) => {
+    const arr = POLLEN[y][name];
+    const data = [];
+    for (let k = 0; k < arr.length; k++) data.push([k, arr[k]]);
+    const isCur = y === state.year;
+    return {
+      name: y + "年",
+      type: "line",
+      smooth: true,
+      symbol: "none",
+      data,
+      lineStyle: { width: isCur ? 3 : 1.5, color: YEAR_COLOR[i], opacity: isCur ? 1 : 0.42 },
+      itemStyle: { color: YEAR_COLOR[i] },
+      areaStyle: isCur ? { opacity: 0.16, color: YEAR_COLOR[i] } : null,
+      z: isCur ? 10 : 2
+    };
+  });
+
+  const avgData = [];
+  for (let k = 0; k < DAYS; k++) {
+    let s = 0, n = 0;
+    for (const y of YEARS) {
+      const arr = POLLEN[y][name];
+      if (k < arr.length) { s += arr[k]; n++; }
+    }
+    avgData.push([k, n ? Math.round(s / n) : null]);
+  }
+
+  const peaks = YEARS.map((y, i) => {
+    const p = peakOf(name, y);
+    return {
+      name: y + "年", value: [p.mi, p.mx],
+      isCur: y === state.year,
+      symbolSize: y === state.year ? 11 : 8,
+      itemStyle: { color: YEAR_COLOR[i], borderColor: "#0b1220", borderWidth: 1.5, opacity: y === state.year ? 1 : 0.75 },
+      label: {
+        show: y === state.year,
+        position: "top", distance: 8,
+        formatter: `${p.mx} · ${p.date}`,
+        color: YEAR_COLOR[i], fontSize: 12, fontWeight: "bold",
+        textBorderColor: "#0b1220", textBorderWidth: 3
+      }
+    };
+  });
+
+  const cp = peakOf(name, state.year);
+  document.getElementById("kPeak").textContent = `${name} · ${state.year} 年峰值`;
+  document.getElementById("cPeak").innerHTML = `${cp.mx} <small>粒/千mm² · ${levelOf(cp.mx)}级</small>`;
+  document.getElementById("kDate").textContent = "峰值日期";
+  document.getElementById("cDate").innerHTML = cp.date +
+    (state.year === "2026" ? ` <small style="color:#34d399">· 截止${dateAt(TODAY_2026).md}</small>` : "");
+
+  document.getElementById("cityHint").innerHTML =
+    `${name} · <span class="${isAnchor ? "src-tag src-real" : "src-tag src-model"}">${isAnchor ? "公开监测锚点" : "生态模型推演"}</span>`;
+
+  statChart.setOption({
+    backgroundColor: "transparent",
+    title: {
+      text: `${name} · 逐年花粉浓度对比`,
+      left: 4, top: 0,
+      textStyle: { color: "#e2e8f0", fontSize: 14, fontWeight: 700 }
+    },
+    tooltip: {
+      trigger: "axis",
+      backgroundColor: "rgba(13,23,42,.94)", borderColor: "#2a3b63",
+      textStyle: { color: "#e2e8f0", fontSize: 12 },
+      formatter(ps) {
+        const pts = ps.filter(p => p.seriesType === "line" && p.data && p.data[1] !== null && p.data[1] !== undefined);
+        if (!pts.length) return "";
+        let html = `<b>${dateAt(pts[0].data[0]).md}</b><br/>`;
+        pts.forEach(p => {
+          const bold = p.seriesName === state.year + "年";
+          html += `${p.marker}${p.seriesName}：<b${bold ? ' style="color:#fff"' : ""}>${p.data[1]}</b> 粒/千mm²<br/>`;
+        });
+        return html;
+      }
+    },
+    legend: { top: 26, left: 4, textStyle: { color: "#94a3b8", fontSize: 11 }, itemWidth: 16, itemHeight: 8 },
+    grid: { left: 50, right: 18, top: 78, bottom: 12 },
+    xAxis: {
+      type: "value", min: 0, max: DAYS - 1,
+      axisLabel: { color: "#94a3b8", fontSize: 10, formatter: v => dateAt(Math.round(v)).md },
+      axisLine: { lineStyle: { color: "#2a3b63" } }, splitLine: { show: false }
+    },
+    yAxis: {
+      type: "value", name: "粒/1000mm²", min: 0, max: 2600,
+      nameTextStyle: { color: "#64748b", fontSize: 10 },
+      splitLine: { lineStyle: { color: "#1c2c4a" } }, axisLabel: { color: "#94a3b8", fontSize: 10 }
+    },
+    series: [
+      ...lineSeries,
+      {
+        name: "5年均值", type: "line", smooth: true, symbol: "none",
+        data: avgData, z: 3,
+        lineStyle: { width: 1.4, color: "#94a3b8", type: "dashed", opacity: 0.65 }
+      },
+      { name: "各年峰值", type: "scatter", data: peaks, z: 12 },
+      {
+        id: "cursor", name: "当前", type: "line", data: [], z: 20,
+        markLine: {
+          silent: true, symbol: "none",
+          lineStyle: { color: "#38bdf8", width: 1.6, type: "solid" },
+          label: {
+            show: true, position: "insideEndTop", distance: 4,
+            formatter: () => dateAt(state.idx).md,
+            color: "#38bdf8", fontSize: 11, fontWeight: "bold",
+            textBorderColor: "#0b1220", textBorderWidth: 3
+          },
+          data: [{ xAxis: state.idx }]
+        }
+      }
+    ]
+  }, { notMerge: true });
+  markCityOnMap(name);
+}
+
+function updateCursor() {
+  statChart.setOption({
+    series: [{
+      id: "cursor",
+      markLine: {
+        silent: true, symbol: "none",
+        lineStyle: { color: "#38bdf8", width: 1.6, type: "solid" },
+        label: {
+          show: true, position: "insideEndTop", distance: 4,
+          formatter: () => dateAt(state.idx).md,
+          color: "#38bdf8", fontSize: 11, fontWeight: "bold",
+          textBorderColor: "#0b1220", textBorderWidth: 3
+        },
+        data: [{ xAxis: state.idx }]
+      }
+    }]
+  });
+}
+
+/* ================= 城市选择 ================= */
+function selectCity(name) {
+  state.selectedCity = name;
+  const el = document.getElementById("cityInput");
+  if (el && document.activeElement !== el) el.value = name;
+  renderCityDetail();
+  markCityOnMap(name);
+}
+function markCityOnMap(name) {
+  const c = cityByName[name];
+  mapChart.setOption({
+    series: [{
+      id: "sel", name: "选中城市", type: "effectScatter", coordinateSystem: "geo",
+      symbolSize: 15, rippleEffect: { brushType: "stroke", scale: 2, period: 2 },
+      itemStyle: { color: "#38bdf8" },
+      data: [{ name: c.name, value: [c.lng, c.lat, 0] }], zlevel: 5
+    }]
+  });
+}
+
+const cityInput = document.getElementById("cityInput");
+const citySuggest = document.getElementById("citySuggest");
+cityInput.addEventListener("input", () => {
+  const q = cityInput.value.trim();
+  if (!q) { citySuggest.classList.remove("show"); return; }
+  const hits = CITIES.filter(c => c.name.includes(q)).slice(0, 40);
+  citySuggest.innerHTML = hits.length
+    ? hits.map(c => `<div data-n="${c.name}">${c.name}${c.anchor === 1 ? ' <span style="color:#34d399;font-size:11px">监测点</span>' : ""}</div>`).join("")
+    : `<div class="empty">未找到匹配城市</div>`;
+  citySuggest.classList.add("show");
+});
+citySuggest.addEventListener("click", e => {
+  const n = e.target.dataset && e.target.dataset.n;
+  if (n) { selectCity(n); citySuggest.classList.remove("show"); }
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest(".citybar-wrap")) citySuggest.classList.remove("show");
+});
+
+document.getElementById("locateBtn").addEventListener("click", () => {
+  if (!navigator.geolocation) { openCityModal("当前环境不支持定位，请从列表中选择城市。"); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude, longitude } = pos.coords;
+    let best = null, bd = Infinity;
+    for (const c of CITIES) {
+      const d = (c.lat - latitude) ** 2 + (c.lng - longitude) ** 2;
+      if (d < bd) { bd = d; best = c; }
+    }
+    if (best) selectCity(best.name);
+  }, () => {
+    openCityModal("定位不可用（本地文件打开时浏览器会禁用定位），请从列表中选择城市。");
+  }, { timeout: 8000 });
+});
+
+function openCityModal(tip) {
+  document.getElementById("cityModalTip").textContent = tip || "";
+  renderCityList("");
+  document.getElementById("cityModal").classList.add("show");
+  setTimeout(() => document.getElementById("citySearch2").focus(), 50);
+}
+function closeCityModal() { document.getElementById("cityModal").classList.remove("show"); }
+function renderCityList(q) {
+  const hits = CITIES.filter(c => !q || c.name.includes(q)).slice(0, 300);
+  document.getElementById("cityList").innerHTML = hits.map(c =>
+    `<div data-n="${c.name}" style="padding:8px 10px;font-size:13.5px;cursor:pointer;color:#cbd5e1;border-radius:7px">${c.name}` +
+    (c.anchor === 1 ? ' <span class="src-tag src-real">监测点</span>' : "") + `</div>`
+  ).join("");
+}
+document.getElementById("citySearch2").addEventListener("input", e => renderCityList(e.target.value.trim()));
+document.getElementById("cityList").addEventListener("click", e => {
+  const n = e.target.dataset && e.target.dataset.n;
+  if (n) { selectCity(n); closeCityModal(); }
+});
+document.getElementById("cityModal").addEventListener("click", e => {
+  if (e.target.id === "cityModal") closeCityModal();
+});
+
+function openModal() { document.getElementById("modal").classList.add("show"); }
+function closeModal() { document.getElementById("modal").classList.remove("show"); }
+document.getElementById("modal").addEventListener("click", e => { if (e.target.id === "modal") closeModal(); });
+document.getElementById("mapSrcBtn").addEventListener("click", openModal);
+
+/* ================= 启动 ================= */
+window.addEventListener("resize", () => { mapChart.resize(); statChart.resize(); });
+cityInput.value = state.selectedCity;
+setFrame(state.idx, true);
+renderCityDetail();
+if (AUTOPLAY) startPlay();
+</script>
+</body>
+</html>
