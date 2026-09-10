@@ -178,6 +178,22 @@
   body.export .timeline { padding:10px 12px 6px; margin-top:8px; }
   body.export input[type=range] { height:8px; }
 
+  /* ---- 3:4 竖版导出 (export=1&v=1 → 1080×1440，小红书信息流) ---- */
+  body.export-v .map-wrap { width:1080px; height:1440px; padding:0; display:block; }
+  body.export-v .export-title { font-size:46px; padding:28px 40px 8px; }
+  body.export-v .export-title small { font-size:19px; margin-top:8px; }
+  body.export-v #map { height:1000px; width:100%; }
+  body.export-v .map-source { top:190px; bottom:auto; font-size:16px; right:34px; }
+  body.export-v .map-legend { font-size:18px; gap:16px; padding:4px 8px 0; }
+  body.export-v .grad-bar { width:520px; height:18px; }
+  body.export-v .timeline { margin-top:0; padding:8px 30px 26px; }
+  body.export-v .tl-date { font-size:46px; min-width:270px; }
+  body.export-v .tl-date small { font-size:19px; margin-left:8px; }
+  body.export-v .speed-btn { padding:10px 18px; font-size:15px; }
+  body.export-v .play-btn { width:64px;height:64px; font-size:22px; }
+  body.export-v input[type=range] { height:10px; }
+  body.export-v .map-src-btn { display:none; }
+
   /* 桌面宽屏（>=1000px）才恢复左右分栏 */
   @media (min-width: 1000px) {
     .main { flex-direction:row; gap:14px; padding:14px 18px; }
@@ -281,7 +297,7 @@
 
 <div class="srcbar">
   数据来源：<b>呼和浩特市赛罕区气象局</b>、<b>北京世纪坛医院变态反应中心</b>等 4 城公开监测 + 353 城生态模型推演
-  ｜ 数据截止 <b>2026-09-06</b> ｜ 更新 <b>2026-09-07</b>
+  ｜ 数据截止 <b>2026-09-10</b> ｜ 更新 <b>2026-09-10</b>
   ｜ 非官方发布 · 不作花粉预报 · 不作医疗建议
 </div>
 
@@ -320,7 +336,7 @@
     </ul>
 
     <h3>2026 年数据范围</h3>
-    <p>2026 年为进行中的年份，本页数据<b>截止至 2026 年 9 月 6 日</b>（季节第 79 天）。时间轴滑块上限自动对齐已整理到的日期；9 月 7 日及之后尚未采集，不做任何外推或预估。</p>
+    <p>2026 年为进行中的年份，本页数据<b>截止至 2026 年 9 月 10 日</b>（季节第 83 天）。时间轴滑块上限自动对齐已整理到的日期；9 月 11 日及之后尚未采集，不做任何外推或预估。</p>
 
     <h3>数据性质与方法</h3>
     <p>本页为<b>公开资料整理与可视化研究</b>成果：4 城采用公开监测数据作为锚点，其余 353 城由蒿属生态分布区与花期物候模型推演生成，<b>推演值不等于实测值</b>，仅可用于观察大尺度时空趋势，不可用于任何单点判断。模型参数依据公开报道的物候与气象事实逐年校准复核。</p>
@@ -356,7 +372,7 @@
 const SEASON_START = new Date(2024, 5, 20);
 const DAYS = 103;
 const YEARS = ["2022", "2023", "2024", "2025", "2026"];
-const TODAY_2026 = 78;
+const TODAY_2026 = 82;
 const DEFAULT_CITY = "北京";
 
 const CITIES = window.CITIES.map(c => ({ name: c.n, lat: c.lat, lng: c.lng, rich: c.rich, anchor: c.anchor }));
@@ -413,7 +429,9 @@ let state = {
 if (qs.get("year") && YEARS.includes(qs.get("year"))) state.year = qs.get("year");
 if (qs.has("idx")) state.idx = Math.max(0, (+qs.get("idx") || 0));
 if (qs.get("city") && cityByName[qs.get("city")]) state.selectedCity = qs.get("city");
+const IS_VERT = qs.get("v") === "1";
 if (IS_EXPORT) document.body.classList.add("export");
+if (IS_EXPORT && IS_VERT) document.body.classList.add("export-v");
 
 /* ================= 地图 ================= */
 CHINA_GEO.features.forEach(f => { if (!f.properties.name) f.properties.name = "南海诸岛"; });
@@ -439,7 +457,9 @@ mapChart.setOption({
     }
   },
   geo: {
-    map: "china", roam: true, center: [104.5, 36.5], zoom: 1.04,
+    map: "china", roam: true,
+    center: IS_VERT ? [104.5, 40.5] : [104.5, 36.5],
+    zoom: IS_VERT ? 1.12 : 1.04,
     scaleLimit: { min: 0.8, max: 8 },
     itemStyle: { areaColor: "#0d1b2e", borderColor: "#1f3352", borderWidth: 0.7 },
     emphasis: { itemStyle: { areaColor: "#132742" }, label: { show: false } },
